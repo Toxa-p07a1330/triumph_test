@@ -58,6 +58,29 @@ export class AppController {
     return polygon;
   }
 
+  selectPolygonAtPoint(targetPoint) {
+    if (!(targetPoint instanceof Point)) {
+      throw new TypeError("AppController selectPolygonAtPoint requires a Point instance.");
+    }
+
+    const polygons = this.#polygons.items.filter((polygon) => !polygon.isDeleted);
+    let selectedPolygonId = null;
+
+    for (let polygonIndex = polygons.length - 1; polygonIndex >= 0; polygonIndex -= 1) {
+      const polygon = polygons[polygonIndex];
+
+      if (GeometryHelper.isPointInPolygon(targetPoint, polygon.points)) {
+        selectedPolygonId = polygon.id;
+        break;
+      }
+    }
+
+    Polygon.selectedPolygonId = selectedPolygonId;
+    this.render();
+
+    return selectedPolygonId;
+  }
+
   #createRandomPolygon() {
     const { width, height } = this.#canvasElement.getBoundingClientRect();
     const canvasWidth = Math.max(180, Math.round(width));

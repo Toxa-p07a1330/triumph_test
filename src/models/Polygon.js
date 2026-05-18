@@ -4,6 +4,7 @@ import { Point } from "./Point.js";
 export class Polygon {
   static MIN_CORNERS_AMOUNT = 3;
   static MAX_CORNERS_AMOUNT = 7;
+  static #selectedPolygonId = null;
   static #nextId = 1;
 
   #id;
@@ -21,6 +22,10 @@ export class Polygon {
 
   get id() {
     return this.#id;
+  }
+
+  get isSelected() {
+    return Polygon.#selectedPolygonId === this.id;
   }
 
   get points() {
@@ -127,5 +132,17 @@ export class Polygon {
       minY: Math.min(...yValues),
       maxY: Math.max(...yValues),
     };
+  }
+
+  static get selectedPolygonId() {
+    return Polygon.#selectedPolygonId;
+  }
+
+  static set selectedPolygonId(value) {
+    if (value !== null && (!Number.isInteger(value) || value < 1)) {
+      throw new TypeError("Polygon selectedPolygonId must be a positive integer or null.");
+    }
+
+    Polygon.#selectedPolygonId = value;
   }
 }

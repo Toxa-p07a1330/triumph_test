@@ -38,7 +38,7 @@ export class CanvasController {
     context.closePath();
     context.fillStyle = polygon.color.toRgbString();
     context.strokeStyle = CanvasController.#getStrokeColor(polygon);
-    context.lineWidth = 2;
+    context.lineWidth = polygon.isSelected ? 4 : 2;
     context.fill();
     context.stroke();
   }
@@ -76,6 +76,10 @@ export class CanvasController {
   }
 
   static #getStrokeColor(polygon) {
+    if (polygon.isSelected) {
+      return "rgb(234, 179, 8)";
+    }
+
     return polygon.color.darkness > 127 ? "rgb(255, 255, 255)" : "rgb(15, 23, 42)";
   }
 }

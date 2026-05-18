@@ -1,4 +1,29 @@
 export class GeometryHelper {
+  static isPointInPolygon(targetPoint, polygonPoints) {
+    let isInside = false;
+
+    for (
+      let currentPointIndex = 0, previousPointIndex = polygonPoints.length - 1;
+      currentPointIndex < polygonPoints.length;
+      previousPointIndex = currentPointIndex, currentPointIndex += 1
+    ) {
+      const currentPoint = polygonPoints[currentPointIndex];
+      const previousPoint = polygonPoints[previousPointIndex];
+      const intersectsHorizontalRay =
+        (currentPoint.y > targetPoint.y) !== (previousPoint.y > targetPoint.y)
+        && targetPoint.x
+          < ((previousPoint.x - currentPoint.x) * (targetPoint.y - currentPoint.y))
+            / (previousPoint.y - currentPoint.y)
+            + currentPoint.x;
+
+      if (intersectsHorizontalRay) {
+        isInside = !isInside;
+      }
+    }
+
+    return isInside;
+  }
+
   static getDistance(firstPoint, secondPoint) {
     return Math.hypot(firstPoint.x - secondPoint.x, firstPoint.y - secondPoint.y);
   }
