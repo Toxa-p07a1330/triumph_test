@@ -1,0 +1,3 @@
+export { Point } from "./Point.js";
+export { Color } from "./Color.js";
+export { Polygon } from "./Polygon.js";
