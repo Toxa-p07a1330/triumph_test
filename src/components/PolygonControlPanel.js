@@ -78,16 +78,22 @@ controlPanelTemplate.innerHTML = `
 
 export class PolygonControlPanel extends HTMLElement {
   #addPolygonButton;
+  #deleteSelectedButton;
 
   constructor() {
     super();
     const shadowRoot = this.attachShadow({ mode: "open" });
     shadowRoot.appendChild(controlPanelTemplate.content.cloneNode(true));
     this.#addPolygonButton = shadowRoot.querySelector('[data-action="add-polygon"]');
+    this.#deleteSelectedButton = shadowRoot.querySelector('[data-action="delete-selected"]');
   }
 
   get addPolygonButton() {
     return this.#addPolygonButton;
+  }
+
+  get deleteSelectedButton() {
+    return this.#deleteSelectedButton;
   }
 }
 

@@ -58,6 +58,36 @@ export class AppController {
     return polygon;
   }
 
+  deleteSelectedPolygon() {
+    const selectedPolygonId = Polygon.selectedPolygonId;
+
+    if (selectedPolygonId === null) {
+      return false;
+    }
+
+    const polygon = this.#polygons.getById(selectedPolygonId);
+
+    if (polygon === null || polygon.isDeleted) {
+      Polygon.selectedPolygonId = null;
+      this.render();
+      return false;
+    }
+
+    polygon.isDeleted = true;
+    this.#historyStack.push(
+      new HistoryRecord(
+        HistoryRecord.ACTION_TYPES.DELETE,
+        polygon.id,
+        { isDeleted: false },
+        { isDeleted: true },
+      ),
+    );
+    Polygon.selectedPolygonId = null;
+    this.render();
+
+    return true;
+  }
+
   selectPolygonAtPoint(targetPoint) {
     if (!(targetPoint instanceof Point)) {
       throw new TypeError("AppController selectPolygonAtPoint requires a Point instance.");
