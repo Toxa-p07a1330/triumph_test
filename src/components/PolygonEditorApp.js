@@ -29,10 +29,23 @@ appTemplate.innerHTML = `
 `;
 
 export class PolygonEditorApp extends HTMLElement {
+  #canvasComponent;
+  #controlPanelComponent;
+
   constructor() {
     super();
     const shadowRoot = this.attachShadow({ mode: "open" });
     shadowRoot.appendChild(appTemplate.content.cloneNode(true));
+    this.#canvasComponent = shadowRoot.querySelector("polygon-canvas");
+    this.#controlPanelComponent = shadowRoot.querySelector("polygon-control-panel");
+  }
+
+  get canvasComponent() {
+    return this.#canvasComponent;
+  }
+
+  get controlPanelComponent() {
+    return this.#controlPanelComponent;
   }
 }
 

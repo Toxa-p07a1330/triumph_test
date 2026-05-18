@@ -77,10 +77,17 @@ controlPanelTemplate.innerHTML = `
 `;
 
 export class PolygonControlPanel extends HTMLElement {
+  #addPolygonButton;
+
   constructor() {
     super();
     const shadowRoot = this.attachShadow({ mode: "open" });
     shadowRoot.appendChild(controlPanelTemplate.content.cloneNode(true));
+    this.#addPolygonButton = shadowRoot.querySelector('[data-action="add-polygon"]');
+  }
+
+  get addPolygonButton() {
+    return this.#addPolygonButton;
   }
 }
 
