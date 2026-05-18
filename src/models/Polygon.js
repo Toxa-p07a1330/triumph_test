@@ -4,26 +4,22 @@ import { Point } from "./Point.js";
 export class Polygon {
   #points = [];
   #color;
+  #position;
+  #isDeleted = false;
 
-  constructor(points, color) {
-    this.points = points;
+  constructor(points, color, position = null) {
+    this.#setGeometry(points, position);
     this.color = color;
   }
 
   get points() {
-    return this.#points.map((point) => point.clone());
+    return this.#points.map(
+      (point) => new Point(point.x + this.#position.x, point.y + this.#position.y),
+    );
   }
 
   set points(points) {
-    if (!Array.isArray(points) || points.length < 3) {
-      throw new TypeError("Polygon points must be an array of at least 3 Point instances.");
-    }
-
-    if (!points.every((point) => point instanceof Point)) {
-      throw new TypeError("Polygon points must contain only Point instances.");
-    }
-
-    this.#points = points.map((point) => point.clone());
+    this.#setGeometry(points, this.#position);
   }
 
   get color() {
@@ -49,8 +45,7 @@ export class Polygon {
   }
 
   get position() {
-    const { minX, maxY } = this.#getBounds();
-    return new Point(minX, maxY);
+    return this.#position.clone();
   }
 
   set position(point) {
@@ -58,13 +53,19 @@ export class Polygon {
       throw new TypeError("Polygon position must be a Point instance.");
     }
 
-    const currentPosition = this.position;
-    const deltaX = point.x - currentPosition.x;
-    const deltaY = point.y - currentPosition.y;
+    this.#position = point.clone();
+  }
 
-    this.#points = this.#points.map(
-      (polygonPoint) => new Point(polygonPoint.x + deltaX, polygonPoint.y + deltaY),
-    );
+  get isDeleted() {
+    return this.#isDeleted;
+  }
+
+  set isDeleted(value) {
+    if (typeof value !== "boolean") {
+      throw new TypeError("Polygon isDeleted flag must be a boolean.");
+    }
+
+    this.#isDeleted = value;
   }
 
   translate(deltaX, deltaY) {
@@ -72,14 +73,42 @@ export class Polygon {
       throw new TypeError("Polygon translation delta must be finite numbers.");
     }
 
-    this.#points = this.#points.map(
-      (point) => new Point(point.x + deltaX, point.y + deltaY),
-    );
+    this.#position = new Point(this.#position.x + deltaX, this.#position.y + deltaY);
   }
 
   #getBounds() {
     const xValues = this.#points.map((point) => point.x);
     const yValues = this.#points.map((point) => point.y);
+
+    return {
+      minX: Math.min(...xValues),
+      maxX: Math.max(...xValues),
+      minY: Math.min(...yValues),
+      maxY: Math.max(...yValues),
+    };
+  }
+
+  #setGeometry(points, position) {
+    if (!Array.isArray(points) || points.length < 3) {
+      throw new TypeError("Polygon points must be an array of at least 3 Point instances.");
+    }
+
+    if (!points.every((point) => point instanceof Point)) {
+      throw new TypeError("Polygon points must contain only Point instances.");
+    }
+
+    const bounds = Polygon.#getBoundsForPoints(points);
+    const basePosition = position instanceof Point ? position.clone() : new Point(bounds.minX, bounds.maxY);
+
+    this.#position = basePosition;
+    this.#points = points.map(
+      (point) => new Point(point.x - this.#position.x, point.y - this.#position.y),
+    );
+  }
+
+  static #getBoundsForPoints(points) {
+    const xValues = points.map((point) => point.x);
+    const yValues = points.map((point) => point.y);
 
     return {
       minX: Math.min(...xValues),
