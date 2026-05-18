@@ -7,7 +7,8 @@ appTemplate.innerHTML = `
   <style>
     :host {
       display: block;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       color: #0f172a;
       background:
         radial-gradient(circle at top left, rgba(255, 255, 255, 0.95), rgba(224, 232, 240, 0.9) 48%, rgba(203, 213, 225, 0.9) 100%);
@@ -17,7 +18,8 @@ appTemplate.innerHTML = `
     .layout {
       display: grid;
       grid-template-rows: minmax(0, 1fr) 100px;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
   </style>
   <main class="layout">
