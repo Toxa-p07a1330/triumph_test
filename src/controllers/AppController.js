@@ -61,18 +61,25 @@ export class AppController {
     const { width, height } = this.#canvasElement.getBoundingClientRect();
     const canvasWidth = Math.max(180, Math.round(width));
     const canvasHeight = Math.max(180, Math.round(height));
-    const triangleWidth = AppController.#getRandomInt(60, 140);
-    const triangleHeight = AppController.#getRandomInt(60, 140);
-    const positionX = AppController.#getRandomInt(20, Math.max(20, canvasWidth - triangleWidth - 20));
-    const positionY = AppController.#getRandomInt(
-      triangleHeight + 20,
-      Math.max(triangleHeight + 20, canvasHeight - 20),
+    const padding = 20;
+    const maxTriangleWidth = Math.max(60, canvasWidth - padding * 2);
+    const maxTriangleHeight = Math.max(60, canvasHeight - padding * 2);
+    const triangleWidth = AppController.#getRandomInt(60, Math.min(140, maxTriangleWidth));
+    const triangleHeight = AppController.#getRandomInt(60, Math.min(140, maxTriangleHeight));
+    const positionX = AppController.#getRandomInt(
+      padding,
+      Math.max(padding, canvasWidth - triangleWidth - padding),
     );
+    const positionY = AppController.#getRandomInt(
+      triangleHeight + padding,
+      Math.max(triangleHeight + padding, canvasHeight - padding),
+    );
+    const topVertexX = AppController.#getRandomInt(10, Math.max(10, triangleWidth - 10));
 
     const points = [
-      new Point(0, 0),
-      new Point(triangleWidth, 0),
-      new Point(AppController.#getRandomInt(10, triangleWidth - 10), -triangleHeight),
+      new Point(positionX, positionY),
+      new Point(positionX + triangleWidth, positionY),
+      new Point(positionX + topVertexX, positionY - triangleHeight),
     ];
 
     return new Polygon(
