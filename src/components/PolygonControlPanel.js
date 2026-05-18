@@ -79,6 +79,8 @@ controlPanelTemplate.innerHTML = `
 export class PolygonControlPanel extends HTMLElement {
   #addPolygonButton;
   #deleteSelectedButton;
+  #undoButton;
+  #redoButton;
 
   constructor() {
     super();
@@ -86,6 +88,8 @@ export class PolygonControlPanel extends HTMLElement {
     shadowRoot.appendChild(controlPanelTemplate.content.cloneNode(true));
     this.#addPolygonButton = shadowRoot.querySelector('[data-action="add-polygon"]');
     this.#deleteSelectedButton = shadowRoot.querySelector('[data-action="delete-selected"]');
+    this.#undoButton = shadowRoot.querySelector('[data-action="undo"]');
+    this.#redoButton = shadowRoot.querySelector('[data-action="redo"]');
   }
 
   get addPolygonButton() {
@@ -94,6 +98,14 @@ export class PolygonControlPanel extends HTMLElement {
 
   get deleteSelectedButton() {
     return this.#deleteSelectedButton;
+  }
+
+  get undoButton() {
+    return this.#undoButton;
+  }
+
+  get redoButton() {
+    return this.#redoButton;
   }
 }
 

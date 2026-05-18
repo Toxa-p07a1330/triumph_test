@@ -12,6 +12,7 @@ import { GeometryHelper } from "../helpers/index.js";
 export class AppController {
   #canvasElement;
   #historyStack;
+  #redoStack;
   #canvasController;
   #polygons;
 
@@ -22,6 +23,7 @@ export class AppController {
 
     this.#canvasElement = canvasElement;
     this.#historyStack = new HistoryStack();
+    this.#redoStack = new HistoryStack();
     this.#canvasController = CanvasController;
     this.#polygons = new PolygonsArray();
   }
@@ -32,6 +34,10 @@ export class AppController {
 
   get historyStack() {
     return this.#historyStack;
+  }
+
+  get redoStack() {
+    return this.#redoStack;
   }
 
   get canvasController() {
@@ -50,7 +56,7 @@ export class AppController {
     const polygon = this.#createRandomPolygon();
 
     this.#polygons.add(polygon);
-    this.#historyStack.push(
+    this.#pushHistoryRecord(
       new HistoryRecord(HistoryRecord.ACTION_TYPES.CREATE, polygon.id),
     );
     this.render();
@@ -74,7 +80,7 @@ export class AppController {
     }
 
     polygon.isDeleted = true;
-    this.#historyStack.push(
+    this.#pushHistoryRecord(
       new HistoryRecord(
         HistoryRecord.ACTION_TYPES.DELETE,
         polygon.id,
@@ -82,6 +88,36 @@ export class AppController {
         { isDeleted: true },
       ),
     );
+    Polygon.selectedPolygonId = null;
+    this.render();
+
+    return true;
+  }
+
+  undo() {
+    const historyRecord = this.#historyStack.pop();
+
+    if (historyRecord === null) {
+      return false;
+    }
+
+    this.#applyHistoryRecord(historyRecord, false);
+    this.#redoStack.push(historyRecord);
+    Polygon.selectedPolygonId = null;
+    this.render();
+
+    return true;
+  }
+
+  redo() {
+    const historyRecord = this.#redoStack.pop();
+
+    if (historyRecord === null) {
+      return false;
+    }
+
+    this.#applyHistoryRecord(historyRecord, true);
+    this.#historyStack.push(historyRecord);
     Polygon.selectedPolygonId = null;
     this.render();
 
@@ -149,6 +185,37 @@ export class AppController {
       ),
       new Point(positionX, positionY),
     );
+  }
+
+  #pushHistoryRecord(historyRecord) {
+    this.#historyStack.push(historyRecord);
+    this.#redoStack.clear();
+  }
+
+  #applyHistoryRecord(historyRecord, useNewProperties) {
+    const polygon = this.#polygons.getById(historyRecord.polygonId);
+
+    if (polygon === null) {
+      return;
+    }
+
+    switch (historyRecord.actionType) {
+      case HistoryRecord.ACTION_TYPES.CREATE:
+        polygon.isDeleted = !useNewProperties;
+        break;
+      case HistoryRecord.ACTION_TYPES.DELETE: {
+        const properties = useNewProperties
+          ? historyRecord.newProperties
+          : historyRecord.oldProperties;
+
+        if (properties !== null && typeof properties.isDeleted === "boolean") {
+          polygon.isDeleted = properties.isDeleted;
+        }
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   static #generatePolygonPoints(cornersAmount, positionX, positionY, polygonWidth, polygonHeight) {

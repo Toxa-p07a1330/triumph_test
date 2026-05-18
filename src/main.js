@@ -7,7 +7,12 @@ const appElement = document.querySelector("polygon-editor-app");
 if (appElement !== null) {
   window.addEventListener("DOMContentLoaded", () => {
     const appController = new AppController(appElement.canvasComponent.canvasElement);
-    const { addPolygonButton, deleteSelectedButton } = appElement.controlPanelComponent;
+    const {
+      addPolygonButton,
+      deleteSelectedButton,
+      undoButton,
+      redoButton,
+    } = appElement.controlPanelComponent;
 
     addPolygonButton.addEventListener("click", () => {
       appController.addRandomPolygon();
@@ -15,6 +20,14 @@ if (appElement !== null) {
 
     deleteSelectedButton.addEventListener("click", () => {
       appController.deleteSelectedPolygon();
+    });
+
+    undoButton.addEventListener("click", () => {
+      appController.undo();
+    });
+
+    redoButton.addEventListener("click", () => {
+      appController.redo();
     });
 
     appElement.canvasComponent.canvasElement.addEventListener("click", (event) => {
