@@ -2,14 +2,23 @@ import { Color } from "./Color.js";
 import { Point } from "./Point.js";
 
 export class Polygon {
+  static #nextId = 1;
+
+  #id;
   #points = [];
   #color;
   #position;
   #isDeleted = false;
 
   constructor(points, color, position = null) {
+    this.#id = Polygon.#nextId;
+    Polygon.#nextId += 1;
     this.#setGeometry(points, position);
     this.color = color;
+  }
+
+  get id() {
+    return this.#id;
   }
 
   get points() {
