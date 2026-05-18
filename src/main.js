@@ -9,7 +9,7 @@ if (appElement !== null) {
     const { addPolygonButton } = appElement.controlPanelComponent;
 
     addPolygonButton.addEventListener("click", () => {
-      appController.addRandomTriangle();
+      appController.addRandomPolygon();
     });
 
     appController.render();

@@ -2,6 +2,8 @@ import { Color } from "./Color.js";
 import { Point } from "./Point.js";
 
 export class Polygon {
+  static MIN_CORNERS_AMOUNT = 3;
+  static MAX_CORNERS_AMOUNT = 7;
   static #nextId = 1;
 
   #id;
