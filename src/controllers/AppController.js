@@ -7,6 +7,7 @@ import {
   Polygon,
   PolygonsArray,
 } from "../models/index.js";
+import { GeometryHelper } from "../helpers/index.js";
 
 export class AppController {
   #canvasElement;
@@ -123,7 +124,7 @@ export class AppController {
 
         candidatePoints.splice(insertionIndex, 0, newPoint);
 
-        if (!AppController.#hasSelfIntersections(candidatePoints)) {
+        if (!GeometryHelper.hasSelfIntersections(candidatePoints)) {
           points.splice(insertionIndex, 0, newPoint);
           nextPointAdded = true;
         }
@@ -152,7 +153,7 @@ export class AppController {
 
     for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
       const nextPointIndex = (pointIndex + 1) % points.length;
-      const distance = AppController.#getPointToSegmentDistance(
+      const distance = GeometryHelper.getPointToSegmentDistance(
         targetPoint,
         points[pointIndex],
         points[nextPointIndex],
@@ -165,116 +166,6 @@ export class AppController {
     }
 
     return nearestEdgeStartIndex + 1;
-  }
-
-  static #getDistance(firstPoint, secondPoint) {
-    return Math.hypot(firstPoint.x - secondPoint.x, firstPoint.y - secondPoint.y);
-  }
-
-  static #getPointToSegmentDistance(targetPoint, segmentStartPoint, segmentEndPoint) {
-    const segmentVectorX = segmentEndPoint.x - segmentStartPoint.x;
-    const segmentVectorY = segmentEndPoint.y - segmentStartPoint.y;
-    const pointVectorX = targetPoint.x - segmentStartPoint.x;
-    const pointVectorY = targetPoint.y - segmentStartPoint.y;
-    const segmentLengthSquared = segmentVectorX ** 2 + segmentVectorY ** 2;
-
-    if (segmentLengthSquared === 0) {
-      return AppController.#getDistance(targetPoint, segmentStartPoint);
-    }
-
-    const projectionFactor = Math.max(
-      0,
-      Math.min(
-        1,
-        (pointVectorX * segmentVectorX + pointVectorY * segmentVectorY) / segmentLengthSquared,
-      ),
-    );
-    const projectionX = segmentStartPoint.x + projectionFactor * segmentVectorX;
-    const projectionY = segmentStartPoint.y + projectionFactor * segmentVectorY;
-
-    return Math.hypot(targetPoint.x - projectionX, targetPoint.y - projectionY);
-  }
-
-  static #hasSelfIntersections(points) {
-    for (let firstEdgeStartIndex = 0; firstEdgeStartIndex < points.length; firstEdgeStartIndex += 1) {
-      const firstEdgeEndIndex = (firstEdgeStartIndex + 1) % points.length;
-
-      for (
-        let secondEdgeStartIndex = firstEdgeStartIndex + 1;
-        secondEdgeStartIndex < points.length;
-        secondEdgeStartIndex += 1
-      ) {
-        const secondEdgeEndIndex = (secondEdgeStartIndex + 1) % points.length;
-
-        if (
-          firstEdgeStartIndex === secondEdgeStartIndex
-          || firstEdgeStartIndex === secondEdgeEndIndex
-          || firstEdgeEndIndex === secondEdgeStartIndex
-          || firstEdgeEndIndex === secondEdgeEndIndex
-        ) {
-          continue;
-        }
-
-        if (
-          AppController.#segmentsIntersect(
-            points[firstEdgeStartIndex],
-            points[firstEdgeEndIndex],
-            points[secondEdgeStartIndex],
-            points[secondEdgeEndIndex],
-          )
-        ) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-  static #segmentsIntersect(firstStart, firstEnd, secondStart, secondEnd) {
-    const firstOrientation = AppController.#getOrientation(firstStart, firstEnd, secondStart);
-    const secondOrientation = AppController.#getOrientation(firstStart, firstEnd, secondEnd);
-    const thirdOrientation = AppController.#getOrientation(secondStart, secondEnd, firstStart);
-    const fourthOrientation = AppController.#getOrientation(secondStart, secondEnd, firstEnd);
-
-    if (firstOrientation === 0 && AppController.#isPointOnSegment(secondStart, firstStart, firstEnd)) {
-      return true;
-    }
-
-    if (secondOrientation === 0 && AppController.#isPointOnSegment(secondEnd, firstStart, firstEnd)) {
-      return true;
-    }
-
-    if (thirdOrientation === 0 && AppController.#isPointOnSegment(firstStart, secondStart, secondEnd)) {
-      return true;
-    }
-
-    if (fourthOrientation === 0 && AppController.#isPointOnSegment(firstEnd, secondStart, secondEnd)) {
-      return true;
-    }
-
-    return firstOrientation !== secondOrientation && thirdOrientation !== fourthOrientation;
-  }
-
-  static #getOrientation(firstPoint, secondPoint, thirdPoint) {
-    const crossProduct =
-      (secondPoint.y - firstPoint.y) * (thirdPoint.x - secondPoint.x)
-      - (secondPoint.x - firstPoint.x) * (thirdPoint.y - secondPoint.y);
-
-    if (Math.abs(crossProduct) < Number.EPSILON) {
-      return 0;
-    }
-
-    return crossProduct > 0 ? 1 : 2;
-  }
-
-  static #isPointOnSegment(targetPoint, segmentStartPoint, segmentEndPoint) {
-    return (
-      targetPoint.x <= Math.max(segmentStartPoint.x, segmentEndPoint.x)
-      && targetPoint.x >= Math.min(segmentStartPoint.x, segmentEndPoint.x)
-      && targetPoint.y <= Math.max(segmentStartPoint.y, segmentEndPoint.y)
-      && targetPoint.y >= Math.min(segmentStartPoint.y, segmentEndPoint.y)
-    );
   }
 
   static #getRandomInt(min, max) {
