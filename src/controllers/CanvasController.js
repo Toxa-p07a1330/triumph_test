@@ -37,10 +37,13 @@ export class CanvasController {
 
     context.closePath();
     context.fillStyle = polygon.color.toRgbString();
-    context.strokeStyle = CanvasController.#getStrokeColor(polygon);
-    context.lineWidth = polygon.isSelected ? 4 : 2;
     context.fill();
-    context.stroke();
+
+    if (polygon.isSelected) {
+      context.strokeStyle = CanvasController.#getStrokeColor(polygon);
+      context.lineWidth = 4;
+      context.stroke();
+    }
   }
 
   static clear(canvasElement) {
@@ -76,10 +79,15 @@ export class CanvasController {
   }
 
   static #getStrokeColor(polygon) {
-    if (polygon.isSelected) {
-      return "rgb(234, 179, 8)";
+    if (!polygon.isSelected) {
+      return "transparent";
     }
 
-    return polygon.color.darkness > 127 ? "rgb(255, 255, 255)" : "rgb(15, 23, 42)";
+    const darkenFactor = 0.65;
+    const strokeRed = Math.max(0, Math.round(polygon.color.r * darkenFactor));
+    const strokeGreen = Math.max(0, Math.round(polygon.color.g * darkenFactor));
+    const strokeBlue = Math.max(0, Math.round(polygon.color.b * darkenFactor));
+
+    return `rgb(${strokeRed}, ${strokeGreen}, ${strokeBlue})`;
   }
 }
