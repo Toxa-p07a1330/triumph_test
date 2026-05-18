@@ -105,18 +105,35 @@ export class AppController {
     ];
 
     while (points.length < cornersAmount) {
-      const newPoint = AppController.#createRandomAbsolutePoint(
-        positionX,
-        positionY,
-        polygonWidth,
-        polygonHeight,
-      );
-      const [firstClosestIndex, secondClosestIndex] = AppController.#findClosestPointIndices(
-        points,
-        newPoint,
-      );
+      let nextPointAdded = false;
+      let generationAttempts = 0;
 
-      AppController.#insertPointBetweenClosest(points, newPoint, firstClosestIndex, secondClosestIndex);
+      while (!nextPointAdded && generationAttempts < 100) {
+        const newPoint = AppController.#createRandomAbsolutePoint(
+          positionX,
+          positionY,
+          polygonWidth,
+          polygonHeight,
+        );
+        const insertionIndex = AppController.#findNearestEdgeInsertionIndex(
+          points,
+          newPoint,
+        );
+        const candidatePoints = [...points];
+
+        candidatePoints.splice(insertionIndex, 0, newPoint);
+
+        if (!AppController.#hasSelfIntersections(candidatePoints)) {
+          points.splice(insertionIndex, 0, newPoint);
+          nextPointAdded = true;
+        }
+
+        generationAttempts += 1;
+      }
+
+      if (!nextPointAdded) {
+        break;
+      }
     }
 
     return points;
@@ -129,42 +146,135 @@ export class AppController {
     );
   }
 
-  static #findClosestPointIndices(points, targetPoint) {
-    const sortedIndices = points
-      .map((point, index) => ({
-        index,
-        distance: AppController.#getDistance(point, targetPoint),
-      }))
-      .sort((left, right) => left.distance - right.distance)
-      .slice(0, 2)
-      .map(({ index }) => index);
+  static #findNearestEdgeInsertionIndex(points, targetPoint) {
+    let nearestEdgeStartIndex = 0;
+    let nearestEdgeDistance = Number.POSITIVE_INFINITY;
 
-    return sortedIndices;
-  }
+    for (let pointIndex = 0; pointIndex < points.length; pointIndex += 1) {
+      const nextPointIndex = (pointIndex + 1) % points.length;
+      const distance = AppController.#getPointToSegmentDistance(
+        targetPoint,
+        points[pointIndex],
+        points[nextPointIndex],
+      );
 
-  static #insertPointBetweenClosest(points, newPoint, firstIndex, secondIndex) {
-    const pointsAmount = points.length;
-    const normalizedFirstIndex = Math.min(firstIndex, secondIndex);
-    const normalizedSecondIndex = Math.max(firstIndex, secondIndex);
-    const areEdgeNeighbours =
-      normalizedSecondIndex - normalizedFirstIndex === 1
-      || (normalizedFirstIndex === 0 && normalizedSecondIndex === pointsAmount - 1);
-
-    if (areEdgeNeighbours && normalizedFirstIndex === 0 && normalizedSecondIndex === pointsAmount - 1) {
-      points.push(newPoint);
-      return;
+      if (distance < nearestEdgeDistance) {
+        nearestEdgeDistance = distance;
+        nearestEdgeStartIndex = pointIndex;
+      }
     }
 
-    if (areEdgeNeighbours) {
-      points.splice(normalizedSecondIndex, 0, newPoint);
-      return;
-    }
-
-    points.splice(normalizedSecondIndex, 0, newPoint);
+    return nearestEdgeStartIndex + 1;
   }
 
   static #getDistance(firstPoint, secondPoint) {
     return Math.hypot(firstPoint.x - secondPoint.x, firstPoint.y - secondPoint.y);
+  }
+
+  static #getPointToSegmentDistance(targetPoint, segmentStartPoint, segmentEndPoint) {
+    const segmentVectorX = segmentEndPoint.x - segmentStartPoint.x;
+    const segmentVectorY = segmentEndPoint.y - segmentStartPoint.y;
+    const pointVectorX = targetPoint.x - segmentStartPoint.x;
+    const pointVectorY = targetPoint.y - segmentStartPoint.y;
+    const segmentLengthSquared = segmentVectorX ** 2 + segmentVectorY ** 2;
+
+    if (segmentLengthSquared === 0) {
+      return AppController.#getDistance(targetPoint, segmentStartPoint);
+    }
+
+    const projectionFactor = Math.max(
+      0,
+      Math.min(
+        1,
+        (pointVectorX * segmentVectorX + pointVectorY * segmentVectorY) / segmentLengthSquared,
+      ),
+    );
+    const projectionX = segmentStartPoint.x + projectionFactor * segmentVectorX;
+    const projectionY = segmentStartPoint.y + projectionFactor * segmentVectorY;
+
+    return Math.hypot(targetPoint.x - projectionX, targetPoint.y - projectionY);
+  }
+
+  static #hasSelfIntersections(points) {
+    for (let firstEdgeStartIndex = 0; firstEdgeStartIndex < points.length; firstEdgeStartIndex += 1) {
+      const firstEdgeEndIndex = (firstEdgeStartIndex + 1) % points.length;
+
+      for (
+        let secondEdgeStartIndex = firstEdgeStartIndex + 1;
+        secondEdgeStartIndex < points.length;
+        secondEdgeStartIndex += 1
+      ) {
+        const secondEdgeEndIndex = (secondEdgeStartIndex + 1) % points.length;
+
+        if (
+          firstEdgeStartIndex === secondEdgeStartIndex
+          || firstEdgeStartIndex === secondEdgeEndIndex
+          || firstEdgeEndIndex === secondEdgeStartIndex
+          || firstEdgeEndIndex === secondEdgeEndIndex
+        ) {
+          continue;
+        }
+
+        if (
+          AppController.#segmentsIntersect(
+            points[firstEdgeStartIndex],
+            points[firstEdgeEndIndex],
+            points[secondEdgeStartIndex],
+            points[secondEdgeEndIndex],
+          )
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  static #segmentsIntersect(firstStart, firstEnd, secondStart, secondEnd) {
+    const firstOrientation = AppController.#getOrientation(firstStart, firstEnd, secondStart);
+    const secondOrientation = AppController.#getOrientation(firstStart, firstEnd, secondEnd);
+    const thirdOrientation = AppController.#getOrientation(secondStart, secondEnd, firstStart);
+    const fourthOrientation = AppController.#getOrientation(secondStart, secondEnd, firstEnd);
+
+    if (firstOrientation === 0 && AppController.#isPointOnSegment(secondStart, firstStart, firstEnd)) {
+      return true;
+    }
+
+    if (secondOrientation === 0 && AppController.#isPointOnSegment(secondEnd, firstStart, firstEnd)) {
+      return true;
+    }
+
+    if (thirdOrientation === 0 && AppController.#isPointOnSegment(firstStart, secondStart, secondEnd)) {
+      return true;
+    }
+
+    if (fourthOrientation === 0 && AppController.#isPointOnSegment(firstEnd, secondStart, secondEnd)) {
+      return true;
+    }
+
+    return firstOrientation !== secondOrientation && thirdOrientation !== fourthOrientation;
+  }
+
+  static #getOrientation(firstPoint, secondPoint, thirdPoint) {
+    const crossProduct =
+      (secondPoint.y - firstPoint.y) * (thirdPoint.x - secondPoint.x)
+      - (secondPoint.x - firstPoint.x) * (thirdPoint.y - secondPoint.y);
+
+    if (Math.abs(crossProduct) < Number.EPSILON) {
+      return 0;
+    }
+
+    return crossProduct > 0 ? 1 : 2;
+  }
+
+  static #isPointOnSegment(targetPoint, segmentStartPoint, segmentEndPoint) {
+    return (
+      targetPoint.x <= Math.max(segmentStartPoint.x, segmentEndPoint.x)
+      && targetPoint.x >= Math.min(segmentStartPoint.x, segmentEndPoint.x)
+      && targetPoint.y <= Math.max(segmentStartPoint.y, segmentEndPoint.y)
+      && targetPoint.y >= Math.min(segmentStartPoint.y, segmentEndPoint.y)
+    );
   }
 
   static #getRandomInt(min, max) {
