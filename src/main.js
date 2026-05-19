@@ -9,6 +9,8 @@ if (appElement !== null) {
     const appController = new AppController(appElement.canvasComponent.canvasElement);
     const {
       addPolygonButton,
+      importJsonButton,
+      exportJsonButton,
       deleteSelectedButton,
       deleteAllButton,
       undoButton,
@@ -17,6 +19,13 @@ if (appElement !== null) {
       recolorSelectedButton,
     } = appElement.controlPanelComponent;
     const canvasElement = appElement.canvasComponent.canvasElement;
+    const importInput = document.createElement("input");
+
+    importInput.type = "file";
+    importInput.accept = ".json,application/json";
+    importInput.hidden = true;
+    document.body.appendChild(importInput);
+
     const getCanvasPoint = (event) => {
       const canvasRect = canvasElement.getBoundingClientRect();
 
@@ -54,6 +63,19 @@ if (appElement !== null) {
       syncInfoPanel();
       syncHistoryButtons();
     };
+    const downloadJson = (content) => {
+      const fileUrl = URL.createObjectURL(
+        new Blob([content], { type: "application/json;charset=utf-8" }),
+      );
+      const downloadLink = document.createElement("a");
+
+      downloadLink.href = fileUrl;
+      downloadLink.download = "polygons.json";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      downloadLink.remove();
+      URL.revokeObjectURL(fileUrl);
+    };
 
     addPolygonButton.addEventListener("click", () => {
       const polygon = appController.addRandomPolygon();
@@ -63,6 +85,32 @@ if (appElement !== null) {
       }
 
       syncUi();
+    });
+
+    importJsonButton.addEventListener("click", () => {
+      importInput.value = "";
+      importInput.click();
+    });
+
+    exportJsonButton.addEventListener("click", () => {
+      downloadJson(appController.exportToJson());
+    });
+
+    importInput.addEventListener("change", async () => {
+      const [selectedFile] = importInput.files ?? [];
+
+      if (selectedFile === undefined) {
+        return;
+      }
+
+      try {
+        const jsonContent = await selectedFile.text();
+
+        appController.importFromJson(jsonContent);
+        syncUi();
+      } catch {
+        alert("Не удалось импортировать JSON");
+      }
     });
 
     deleteSelectedButton.addEventListener("click", () => {
@@ -92,7 +140,6 @@ if (appElement !== null) {
 
     recolorSelectedButton.addEventListener("click", () => {
       const hexColor = colorInput.value.replace("#", "");
-
       const isRecolored = appController.recolorSelectedPolygon(
         new Color(
           Number.parseInt(hexColor.slice(0, 2), 16),

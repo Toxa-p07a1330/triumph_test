@@ -203,6 +203,46 @@ export class AppController {
     return true;
   }
 
+  exportToJson() {
+    return JSON.stringify(
+      {
+        polygons: this.#polygons.items.map((polygon) => polygon.toJSON()),
+      },
+      null,
+      2,
+    );
+  }
+
+  importFromJson(jsonContent) {
+    if (typeof jsonContent !== "string") {
+      throw new TypeError("AppController importFromJson requires a JSON string.");
+    }
+
+    const parsedContent = JSON.parse(jsonContent);
+
+    if (
+      parsedContent === null
+      || typeof parsedContent !== "object"
+      || !Array.isArray(parsedContent.polygons)
+    ) {
+      throw new TypeError("JSON must contain a polygons array.");
+    }
+
+    const importedPolygons = parsedContent.polygons.map((polygonSnapshot) =>
+      Polygon.fromJSON(polygonSnapshot),
+    );
+
+    this.#polygons.items = importedPolygons;
+    this.#historyStack.clear();
+    this.#redoStack.clear();
+    this.#dragState = null;
+    Polygon.selectedPolygonId = null;
+    importedPolygons.forEach((polygon) => polygon.finishAppearanceAnimation());
+    this.render();
+
+    return importedPolygons.length;
+  }
+
   beginPolygonDrag(targetPoint) {
     if (!(targetPoint instanceof Point)) {
       throw new TypeError("AppController beginPolygonDrag requires a Point instance.");

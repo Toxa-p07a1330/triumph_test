@@ -22,6 +22,26 @@ export class Polygon {
     this.color = color;
   }
 
+  toJSON() {
+    return {
+      id: this.#id,
+      points: this.points.map((point) => ({
+        x: point.x,
+        y: point.y,
+      })),
+      color: {
+        r: this.#color.r,
+        g: this.#color.g,
+        b: this.#color.b,
+      },
+      position: {
+        x: this.#position.x,
+        y: this.#position.y,
+      },
+      isDeleted: this.#isDeleted,
+    };
+  }
+
   get id() {
     return this.#id;
   }
@@ -167,5 +187,60 @@ export class Polygon {
     }
 
     Polygon.#selectedPolygonId = value;
+  }
+
+  static fromJSON(snapshot) {
+    if (snapshot === null || typeof snapshot !== "object") {
+      throw new TypeError("Polygon snapshot must be an object.");
+    }
+
+    if (!Array.isArray(snapshot.points) || snapshot.points.length < 3) {
+      throw new TypeError("Polygon snapshot points must be an array of at least 3 points.");
+    }
+
+    const points = snapshot.points.map((point) => {
+      if (
+        point === null
+        || typeof point !== "object"
+        || !Number.isFinite(point.x)
+        || !Number.isFinite(point.y)
+      ) {
+        throw new TypeError("Polygon snapshot contains invalid point data.");
+      }
+
+      return new Point(point.x, point.y);
+    });
+
+    if (
+      snapshot.color === null
+      || typeof snapshot.color !== "object"
+      || !Number.isInteger(snapshot.color.r)
+      || !Number.isInteger(snapshot.color.g)
+      || !Number.isInteger(snapshot.color.b)
+    ) {
+      throw new TypeError("Polygon snapshot contains invalid color data.");
+    }
+
+    const polygon = new Polygon(
+      points,
+      new Color(snapshot.color.r, snapshot.color.g, snapshot.color.b),
+      snapshot.position !== null
+        && typeof snapshot.position === "object"
+        && Number.isFinite(snapshot.position.x)
+        && Number.isFinite(snapshot.position.y)
+        ? new Point(snapshot.position.x, snapshot.position.y)
+        : null,
+    );
+
+    if (typeof snapshot.isDeleted === "boolean") {
+      polygon.isDeleted = snapshot.isDeleted;
+    }
+
+    if (Number.isInteger(snapshot.id) && snapshot.id > 0) {
+      polygon.#id = snapshot.id;
+      Polygon.#nextId = Math.max(Polygon.#nextId, snapshot.id + 1);
+    }
+
+    return polygon;
   }
 }

@@ -101,6 +101,8 @@ controlPanelTemplate.innerHTML = `
   </style>
   <div class="panel">
     <button type="button" data-action="add-polygon">Сгенерировать полигон</button>
+    <button type="button" data-action="import-json">Импорт</button>
+    <button type="button" data-action="export-json">Экспорт</button>
     <button type="button" data-action="delete-selected">Удалить выбранный</button>
     <button type="button" data-action="delete-all">Удалить все</button>
     <button type="button" data-action="undo" title="Горячая клавиша: Ctrl+Z">Отменить</button>
@@ -122,6 +124,8 @@ controlPanelTemplate.innerHTML = `
 
 export class PolygonControlPanel extends HTMLElement {
   #addPolygonButton;
+  #importJsonButton;
+  #exportJsonButton;
   #deleteSelectedButton;
   #deleteAllButton;
   #undoButton;
@@ -136,6 +140,8 @@ export class PolygonControlPanel extends HTMLElement {
     const shadowRoot = this.attachShadow({ mode: "open" });
     shadowRoot.appendChild(controlPanelTemplate.content.cloneNode(true));
     this.#addPolygonButton = shadowRoot.querySelector('[data-action="add-polygon"]');
+    this.#importJsonButton = shadowRoot.querySelector('[data-action="import-json"]');
+    this.#exportJsonButton = shadowRoot.querySelector('[data-action="export-json"]');
     this.#deleteSelectedButton = shadowRoot.querySelector('[data-action="delete-selected"]');
     this.#deleteAllButton = shadowRoot.querySelector('[data-action="delete-all"]');
     this.#undoButton = shadowRoot.querySelector('[data-action="undo"]');
@@ -148,6 +154,14 @@ export class PolygonControlPanel extends HTMLElement {
 
   get addPolygonButton() {
     return this.#addPolygonButton;
+  }
+
+  get importJsonButton() {
+    return this.#importJsonButton;
+  }
+
+  get exportJsonButton() {
+    return this.#exportJsonButton;
   }
 
   get deleteSelectedButton() {
