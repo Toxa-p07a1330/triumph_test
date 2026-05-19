@@ -1,7 +1,6 @@
 import "./components/PolygonEditorApp.js";
 import { AppController } from "./controllers/index.js";
 import { Point } from "./models/index.js";
-import { debounce } from "./utils/debounce.js";
 
 const appElement = document.querySelector("polygon-editor-app");
 
@@ -23,9 +22,6 @@ if (appElement !== null) {
         event.clientY - canvasRect.top,
       );
     };
-    const debouncedDragUpdate = debounce((point) => {
-      appController.updatePolygonDrag(point);
-    });
 
     addPolygonButton.addEventListener("click", () => {
       const polygon = appController.addRandomPolygon();
@@ -60,7 +56,7 @@ if (appElement !== null) {
         return;
       }
 
-      debouncedDragUpdate(getCanvasPoint(event));
+      appController.updatePolygonDrag(getCanvasPoint(event));
     });
 
     window.addEventListener("mouseup", () => {
