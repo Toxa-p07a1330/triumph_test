@@ -100,15 +100,15 @@ controlPanelTemplate.innerHTML = `
     }
   </style>
   <div class="panel">
-    <button type="button" data-action="add-polygon">Сгенерировать полигон</button>
-    <button type="button" data-action="import-json">Импорт</button>
-    <button type="button" data-action="export-json">Экспорт</button>
-    <button type="button" data-action="delete-selected">Удалить выбранный</button>
-    <button type="button" data-action="delete-all">Удалить все</button>
-    <button type="button" data-action="undo" title="Горячая клавиша: Ctrl+Z">Отменить</button>
-    <button type="button" data-action="redo" title="Горячая клавиша: Ctrl+Y">Повторить</button>
+    <button type="button" data-action="add-polygon">➕ Сгенерировать полигон</button>
+    <button type="button" data-action="import-json">📥 Импорт</button>
+    <button type="button" data-action="export-json">📤 Экспорт</button>
+    <button type="button" data-action="delete-selected">🗑 Удалить выбранный</button>
+    <button type="button" data-action="delete-all">🧹 Удалить все</button>
+    <button type="button" data-action="undo" title="Горячая клавиша: Ctrl+Z">↶ Отменить</button>
+    <button type="button" data-action="redo" title="Горячая клавиша: Ctrl+Y / Ctrl+Shift+Z">↷ Повторить</button>
     <input type="color" value="#4f46e5" aria-label="Цвет выбранного полигона" />
-    <button type="button" data-action="recolor-selected">Перекрасить выбранный</button>
+    <button type="button" data-action="recolor-selected">🎨 Перекрасить выбранный</button>
     <div class="info-panel">
       <div class="info-block">
         <div class="info-title">Количество полигонов</div>
