@@ -129,6 +129,27 @@ if (appElement !== null) {
       syncUi();
     });
 
+    window.addEventListener("keydown", (event) => {
+      if (!event.ctrlKey) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+
+      if (key === "z") {
+        event.preventDefault();
+        appController.undo();
+        syncUi();
+        return;
+      }
+
+      if (key === "y") {
+        event.preventDefault();
+        appController.redo();
+        syncUi();
+      }
+    });
+
     appController.render();
     syncUi();
   });
