@@ -51,7 +51,7 @@ if (appElement !== null) {
       appElement.controlPanelComponent.polygonsCount = activePolygonsCount;
       appElement.controlPanelComponent.selectedPolygonName =
         selectedPolygon !== null && !selectedPolygon.isDeleted
-          ? String(selectedPolygon.id)
+          ? selectedPolygon.name
           : "Ничего не выбрано";
     };
     const syncHistoryButtons = () => {

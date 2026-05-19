@@ -12,14 +12,16 @@ export class Polygon {
   #points = [];
   #color;
   #position;
+  #name;
   #isDeleted = false;
   #appearanceAnimationStartTime = null;
 
-  constructor(points, color, position = null) {
+  constructor(points, color, position = null, name = null) {
     this.#id = Polygon.#nextId;
     Polygon.#nextId += 1;
     this.#setGeometry(points, position);
     this.color = color;
+    this.name = name ?? `Polygon ${this.#id}`;
   }
 
   toJSON() {
@@ -34,6 +36,7 @@ export class Polygon {
         g: this.#color.g,
         b: this.#color.b,
       },
+      name: this.#name,
       position: {
         x: this.#position.x,
         y: this.#position.y,
@@ -44,6 +47,18 @@ export class Polygon {
 
   get id() {
     return this.#id;
+  }
+
+  get name() {
+    return this.#name;
+  }
+
+  set name(value) {
+    if (typeof value !== "string" || value.trim().length === 0) {
+      throw new TypeError("Polygon name must be a non-empty string.");
+    }
+
+    this.#name = value.trim();
   }
 
   get isSelected() {
@@ -229,6 +244,9 @@ export class Polygon {
         && Number.isFinite(snapshot.position.x)
         && Number.isFinite(snapshot.position.y)
         ? new Point(snapshot.position.x, snapshot.position.y)
+        : null,
+      typeof snapshot.name === "string" && snapshot.name.trim().length > 0
+        ? snapshot.name
         : null,
     );
 

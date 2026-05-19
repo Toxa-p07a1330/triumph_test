@@ -7,7 +7,7 @@ import {
   Polygon,
   PolygonsArray,
 } from "../models/index.js";
-import { GeometryHelper } from "../helpers/index.js";
+import { GeometryHelper, RandomNameHelper } from "../helpers/index.js";
 
 export class AppController {
   #canvasElement;
@@ -433,6 +433,7 @@ export class AppController {
       polygonWidth,
       polygonHeight,
     );
+    const existingNames = new Set(this.#polygons.items.map((polygon) => polygon.name));
 
     return new Polygon(
       points,
@@ -442,6 +443,7 @@ export class AppController {
         AppController.#getRandomInt(40, 240),
       ),
       new Point(positionX, positionY),
+      RandomNameHelper.generate(existingNames),
     );
   }
 
