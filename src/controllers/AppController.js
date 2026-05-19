@@ -163,7 +163,7 @@ export class AppController {
     const oldColor = polygon.color.clone();
 
     if (oldColor.r === color.r && oldColor.g === color.g && oldColor.b === color.b) {
-      return false;
+      return true;
     }
 
     polygon.color = color.clone();
