@@ -81,6 +81,8 @@ export class PolygonControlPanel extends HTMLElement {
   #deleteSelectedButton;
   #undoButton;
   #redoButton;
+  #colorInput;
+  #recolorSelectedButton;
 
   constructor() {
     super();
@@ -90,6 +92,8 @@ export class PolygonControlPanel extends HTMLElement {
     this.#deleteSelectedButton = shadowRoot.querySelector('[data-action="delete-selected"]');
     this.#undoButton = shadowRoot.querySelector('[data-action="undo"]');
     this.#redoButton = shadowRoot.querySelector('[data-action="redo"]');
+    this.#colorInput = shadowRoot.querySelector('input[type="color"]');
+    this.#recolorSelectedButton = shadowRoot.querySelector('[data-action="recolor-selected"]');
   }
 
   get addPolygonButton() {
@@ -106,6 +110,14 @@ export class PolygonControlPanel extends HTMLElement {
 
   get redoButton() {
     return this.#redoButton;
+  }
+
+  get colorInput() {
+    return this.#colorInput;
+  }
+
+  get recolorSelectedButton() {
+    return this.#recolorSelectedButton;
   }
 }
 

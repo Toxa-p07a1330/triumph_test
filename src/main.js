@@ -1,6 +1,6 @@
 import "./components/PolygonEditorApp.js";
 import { AppController } from "./controllers/index.js";
-import { Point } from "./models/index.js";
+import { Color, Point } from "./models/index.js";
 
 const appElement = document.querySelector("polygon-editor-app");
 
@@ -12,6 +12,8 @@ if (appElement !== null) {
       deleteSelectedButton,
       undoButton,
       redoButton,
+      colorInput,
+      recolorSelectedButton,
     } = appElement.controlPanelComponent;
     const canvasElement = appElement.canvasComponent.canvasElement;
     const getCanvasPoint = (event) => {
@@ -22,25 +24,53 @@ if (appElement !== null) {
         event.clientY - canvasRect.top,
       );
     };
+    const toHex = (value) => value.toString(16).padStart(2, "0");
+    const syncSelectedPolygonColor = () => {
+      const selectedPolygon = appController.selectedPolygon;
+
+      if (selectedPolygon === null || selectedPolygon.isDeleted) {
+        return;
+      }
+
+      colorInput.value = `#${toHex(selectedPolygon.color.r)}${toHex(selectedPolygon.color.g)}${toHex(selectedPolygon.color.b)}`;
+    };
 
     addPolygonButton.addEventListener("click", () => {
       const polygon = appController.addRandomPolygon();
 
       if (polygon === null) {
-        alert("Не удалось добавить полигон");
+        alert("Ну удалось добавить полигон");
       }
+
+      syncSelectedPolygonColor();
     });
 
     deleteSelectedButton.addEventListener("click", () => {
       appController.deleteSelectedPolygon();
+      syncSelectedPolygonColor();
     });
 
     undoButton.addEventListener("click", () => {
       appController.undo();
+      syncSelectedPolygonColor();
     });
 
     redoButton.addEventListener("click", () => {
       appController.redo();
+      syncSelectedPolygonColor();
+    });
+
+    recolorSelectedButton.addEventListener("click", () => {
+      const hexColor = colorInput.value.replace("#", "");
+
+      appController.recolorSelectedPolygon(
+        new Color(
+          Number.parseInt(hexColor.slice(0, 2), 16),
+          Number.parseInt(hexColor.slice(2, 4), 16),
+          Number.parseInt(hexColor.slice(4, 6), 16),
+        ),
+      );
+      syncSelectedPolygonColor();
     });
 
     canvasElement.addEventListener("mousedown", (event) => {
@@ -49,6 +79,7 @@ if (appElement !== null) {
       }
 
       appController.beginPolygonDrag(getCanvasPoint(event));
+      syncSelectedPolygonColor();
     });
 
     window.addEventListener("mousemove", (event) => {
@@ -65,8 +96,10 @@ if (appElement !== null) {
       }
 
       appController.endPolygonDrag();
+      syncSelectedPolygonColor();
     });
 
     appController.render();
+    syncSelectedPolygonColor();
   });
 }

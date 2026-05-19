@@ -53,6 +53,14 @@ export class AppController {
     return this.#polygons;
   }
 
+  get selectedPolygon() {
+    if (Polygon.selectedPolygonId === null) {
+      return null;
+    }
+
+    return this.#polygons.getById(Polygon.selectedPolygonId);
+  }
+
   render() {
     this.#canvasController.drawPolygons(this.#canvasElement, this.#polygons);
   }
@@ -98,6 +106,49 @@ export class AppController {
       ),
     );
     Polygon.selectedPolygonId = null;
+    this.render();
+
+    return true;
+  }
+
+  recolorSelectedPolygon(color) {
+    if (!(color instanceof Color)) {
+      throw new TypeError("AppController recolorSelectedPolygon requires a Color instance.");
+    }
+
+    const polygon = this.selectedPolygon;
+
+    if (polygon === null || polygon.isDeleted) {
+      return false;
+    }
+
+    const oldColor = polygon.color.clone();
+
+    if (oldColor.r === color.r && oldColor.g === color.g && oldColor.b === color.b) {
+      return false;
+    }
+
+    polygon.color = color.clone();
+    this.#pushHistoryRecord(
+      new HistoryRecord(
+        HistoryRecord.ACTION_TYPES.RECOLORED,
+        polygon.id,
+        {
+          color: {
+            r: oldColor.r,
+            g: oldColor.g,
+            b: oldColor.b,
+          },
+        },
+        {
+          color: {
+            r: color.r,
+            g: color.g,
+            b: color.b,
+          },
+        },
+      ),
+    );
     this.render();
 
     return true;
@@ -374,6 +425,26 @@ export class AppController {
           && Number.isFinite(properties.position.y)
         ) {
           polygon.position = new Point(properties.position.x, properties.position.y);
+        }
+        break;
+      }
+      case HistoryRecord.ACTION_TYPES.RECOLORED: {
+        const properties = useNewProperties
+          ? historyRecord.newProperties
+          : historyRecord.oldProperties;
+
+        if (
+          properties !== null
+          && properties.color !== undefined
+          && Number.isInteger(properties.color.r)
+          && Number.isInteger(properties.color.g)
+          && Number.isInteger(properties.color.b)
+        ) {
+          polygon.color = new Color(
+            properties.color.r,
+            properties.color.g,
+            properties.color.b,
+          );
         }
         break;
       }
