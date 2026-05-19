@@ -22,7 +22,7 @@ export class CanvasController {
     }
 
     const context = CanvasController.#getContext(canvasElement);
-    const points = polygon.points;
+    const points = CanvasController.#getRenderablePoints(polygon);
 
     if (points.length < 3) {
       return;
@@ -89,5 +89,31 @@ export class CanvasController {
     const strokeBlue = Math.max(0, Math.round(polygon.color.b * darkenFactor));
 
     return `rgb(${strokeRed}, ${strokeGreen}, ${strokeBlue})`;
+  }
+
+  static #getRenderablePoints(polygon) {
+    const points = polygon.points;
+
+    if (!polygon.isAppearing) {
+      return points;
+    }
+
+    const progress = polygon.getAppearanceProgress();
+    const easedProgress = 1 - (1 - progress) ** 3;
+
+    if (progress >= 1) {
+      polygon.finishAppearanceAnimation();
+      return points;
+    }
+
+    const anchorX = Math.min(...points.map((point) => point.x)) + polygon.width / 2;
+    const anchorY = polygon.position.y;
+    const scaleX = 1.12 - 0.12 * easedProgress;
+    const scaleY = 0.12 + 0.88 * easedProgress;
+
+    return points.map((point) => ({
+      x: anchorX + (point.x - anchorX) * scaleX,
+      y: anchorY + (point.y - anchorY) * scaleY,
+    }));
   }
 }

@@ -16,6 +16,7 @@ export class AppController {
   #canvasController;
   #polygons;
   #dragState = null;
+  #animationFrameId = null;
 
   constructor(canvasElement) {
     if (!(canvasElement instanceof HTMLCanvasElement)) {
@@ -73,10 +74,12 @@ export class AppController {
     }
 
     this.#polygons.add(polygon);
+    polygon.startAppearanceAnimation();
     this.#pushHistoryRecord(
       new HistoryRecord(HistoryRecord.ACTION_TYPES.CREATE, polygon.id),
     );
     this.render();
+    this.#ensureAppearanceAnimationLoop();
 
     return polygon;
   }
@@ -430,6 +433,29 @@ export class AppController {
     this.#redoStack.clear();
   }
 
+  #ensureAppearanceAnimationLoop() {
+    if (this.#animationFrameId !== null) {
+      return;
+    }
+
+    const animate = () => {
+      this.render();
+
+      const hasAppearingPolygons = this.#polygons.items.some(
+        (polygon) => !polygon.isDeleted && polygon.isAppearing,
+      );
+
+      if (hasAppearingPolygons) {
+        this.#animationFrameId = window.requestAnimationFrame(animate);
+        return;
+      }
+
+      this.#animationFrameId = null;
+    };
+
+    this.#animationFrameId = window.requestAnimationFrame(animate);
+  }
+
   #applyHistoryRecord(historyRecord, useNewProperties) {
     const polygon = this.#polygons.getById(historyRecord.polygonId);
 
@@ -440,6 +466,12 @@ export class AppController {
     switch (historyRecord.actionType) {
       case HistoryRecord.ACTION_TYPES.CREATE:
         polygon.isDeleted = !useNewProperties;
+        if (useNewProperties) {
+          polygon.startAppearanceAnimation();
+          this.#ensureAppearanceAnimationLoop();
+        } else {
+          polygon.finishAppearanceAnimation();
+        }
         break;
       case HistoryRecord.ACTION_TYPES.DELETE: {
         const properties = useNewProperties

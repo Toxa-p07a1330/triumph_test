@@ -4,6 +4,7 @@ import { Point } from "./Point.js";
 export class Polygon {
   static MIN_CORNERS_AMOUNT = 3;
   static MAX_CORNERS_AMOUNT = 7;
+  static APPEAR_ANIMATION_DURATION_MS = 500;
   static #selectedPolygonId = null;
   static #nextId = 1;
 
@@ -12,6 +13,7 @@ export class Polygon {
   #color;
   #position;
   #isDeleted = false;
+  #appearanceAnimationStartTime = null;
 
   constructor(points, color, position = null) {
     this.#id = Polygon.#nextId;
@@ -82,6 +84,27 @@ export class Polygon {
     }
 
     this.#isDeleted = value;
+  }
+
+  get isAppearing() {
+    return this.#appearanceAnimationStartTime !== null;
+  }
+
+  getAppearanceProgress(currentTime = performance.now()) {
+    if (this.#appearanceAnimationStartTime === null) {
+      return 1;
+    }
+
+    const elapsedTime = currentTime - this.#appearanceAnimationStartTime;
+    return Math.min(1, elapsedTime / Polygon.APPEAR_ANIMATION_DURATION_MS);
+  }
+
+  startAppearanceAnimation(startTime = performance.now()) {
+    this.#appearanceAnimationStartTime = startTime;
+  }
+
+  finishAppearanceAnimation() {
+    this.#appearanceAnimationStartTime = null;
   }
 
   translate(deltaX, deltaY) {
