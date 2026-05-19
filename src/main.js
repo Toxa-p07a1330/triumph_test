@@ -60,7 +60,12 @@ if (appElement !== null) {
     });
 
     deleteSelectedButton.addEventListener("click", () => {
-      appController.deleteSelectedPolygon();
+      const isDeleted = appController.deleteSelectedPolygon();
+
+      if (!isDeleted) {
+        alert("Ничего не выбрано");
+      }
+
       syncUi();
     });
 
@@ -77,13 +82,18 @@ if (appElement !== null) {
     recolorSelectedButton.addEventListener("click", () => {
       const hexColor = colorInput.value.replace("#", "");
 
-      appController.recolorSelectedPolygon(
+      const isRecolored = appController.recolorSelectedPolygon(
         new Color(
           Number.parseInt(hexColor.slice(0, 2), 16),
           Number.parseInt(hexColor.slice(2, 4), 16),
           Number.parseInt(hexColor.slice(4, 6), 16),
         ),
       );
+
+      if (!isRecolored) {
+        alert("Ничего не выбрано");
+      }
+
       syncUi();
     });
 
