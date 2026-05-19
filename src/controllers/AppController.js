@@ -55,6 +55,10 @@ export class AppController {
   addRandomPolygon() {
     const polygon = this.#createRandomPolygon();
 
+    if (polygon === null) {
+      return null;
+    }
+
     this.#polygons.add(polygon);
     this.#pushHistoryRecord(
       new HistoryRecord(HistoryRecord.ACTION_TYPES.CREATE, polygon.id),
@@ -148,6 +152,23 @@ export class AppController {
   }
 
   #createRandomPolygon() {
+    let polygon = null;
+    let generationAttempts = 0;
+
+    while (polygon === null && generationAttempts < 100) {
+      const candidatePolygon = this.#createPolygonCandidate();
+
+      if (!this.#overlapsExistingPolygons(candidatePolygon)) {
+        polygon = candidatePolygon;
+      }
+
+      generationAttempts += 1;
+    }
+
+    return polygon;
+  }
+
+  #createPolygonCandidate() {
     const { width, height } = this.#canvasElement.getBoundingClientRect();
     const canvasWidth = Math.max(180, Math.round(width));
     const canvasHeight = Math.max(180, Math.round(height));
@@ -185,6 +206,12 @@ export class AppController {
       ),
       new Point(positionX, positionY),
     );
+  }
+
+  #overlapsExistingPolygons(candidatePolygon) {
+    return this.#polygons.items
+      .filter((polygon) => !polygon.isDeleted)
+      .some((polygon) => GeometryHelper.polygonsOverlap(candidatePolygon.points, polygon.points));
   }
 
   #pushHistoryRecord(historyRecord) {

@@ -1,4 +1,30 @@
 export class GeometryHelper {
+  static polygonsOverlap(firstPolygonPoints, secondPolygonPoints) {
+    for (let firstPointIndex = 0; firstPointIndex < firstPolygonPoints.length; firstPointIndex += 1) {
+      const firstNextPointIndex = (firstPointIndex + 1) % firstPolygonPoints.length;
+
+      for (let secondPointIndex = 0; secondPointIndex < secondPolygonPoints.length; secondPointIndex += 1) {
+        const secondNextPointIndex = (secondPointIndex + 1) % secondPolygonPoints.length;
+
+        if (
+          GeometryHelper.segmentsIntersect(
+            firstPolygonPoints[firstPointIndex],
+            firstPolygonPoints[firstNextPointIndex],
+            secondPolygonPoints[secondPointIndex],
+            secondPolygonPoints[secondNextPointIndex],
+          )
+        ) {
+          return true;
+        }
+      }
+    }
+
+    return (
+      GeometryHelper.isPointInPolygon(firstPolygonPoints[0], secondPolygonPoints)
+      || GeometryHelper.isPointInPolygon(secondPolygonPoints[0], firstPolygonPoints)
+    );
+  }
+
   static isPointInPolygon(targetPoint, polygonPoints) {
     let isInside = false;
 

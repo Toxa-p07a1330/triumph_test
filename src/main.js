@@ -15,7 +15,11 @@ if (appElement !== null) {
     } = appElement.controlPanelComponent;
 
     addPolygonButton.addEventListener("click", () => {
-      appController.addRandomPolygon();
+      const polygon = appController.addRandomPolygon();
+
+      if (polygon === null) {
+        alert("Не удалось добавить полигон");
+      }
     });
 
     deleteSelectedButton.addEventListener("click", () => {
