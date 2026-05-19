@@ -2,6 +2,7 @@ export class HistoryRecord {
   static ACTION_TYPES = Object.freeze({
     CREATE: "create",
     DELETE: "delete",
+    DELETE_ALL: "delete_all",
     RECOLORED: "recolored",
     MOVED: "moved",
   });

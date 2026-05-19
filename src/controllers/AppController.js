@@ -111,6 +111,44 @@ export class AppController {
     return true;
   }
 
+  deleteAllPolygons() {
+    const activePolygons = this.#polygons.items.filter((polygon) => !polygon.isDeleted);
+
+    if (activePolygons.length === 0) {
+      return false;
+    }
+
+    const oldProperties = {
+      polygons: activePolygons.map((polygon) => ({
+        polygonId: polygon.id,
+        isDeleted: false,
+      })),
+    };
+    const newProperties = {
+      polygons: activePolygons.map((polygon) => ({
+        polygonId: polygon.id,
+        isDeleted: true,
+      })),
+    };
+
+    activePolygons.forEach((polygon) => {
+      polygon.isDeleted = true;
+    });
+
+    this.#pushHistoryRecord(
+      new HistoryRecord(
+        HistoryRecord.ACTION_TYPES.DELETE_ALL,
+        activePolygons[0].id,
+        oldProperties,
+        newProperties,
+      ),
+    );
+    Polygon.selectedPolygonId = null;
+    this.render();
+
+    return true;
+  }
+
   recolorSelectedPolygon(color) {
     if (!(color instanceof Color)) {
       throw new TypeError("AppController recolorSelectedPolygon requires a Color instance.");
@@ -410,6 +448,22 @@ export class AppController {
 
         if (properties !== null && typeof properties.isDeleted === "boolean") {
           polygon.isDeleted = properties.isDeleted;
+        }
+        break;
+      }
+      case HistoryRecord.ACTION_TYPES.DELETE_ALL: {
+        const properties = useNewProperties
+          ? historyRecord.newProperties
+          : historyRecord.oldProperties;
+
+        if (properties !== null && Array.isArray(properties.polygons)) {
+          properties.polygons.forEach((polygonState) => {
+            const statePolygon = this.#polygons.getById(polygonState.polygonId);
+
+            if (statePolygon !== null && typeof polygonState.isDeleted === "boolean") {
+              statePolygon.isDeleted = polygonState.isDeleted;
+            }
+          });
         }
         break;
       }

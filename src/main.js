@@ -10,6 +10,7 @@ if (appElement !== null) {
     const {
       addPolygonButton,
       deleteSelectedButton,
+      deleteAllButton,
       undoButton,
       redoButton,
       colorInput,
@@ -66,6 +67,11 @@ if (appElement !== null) {
         alert("Ничего не выбрано");
       }
 
+      syncUi();
+    });
+
+    deleteAllButton.addEventListener("click", () => {
+      appController.deleteAllPolygons();
       syncUi();
     });
 
