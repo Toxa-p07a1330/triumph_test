@@ -95,8 +95,8 @@ controlPanelTemplate.innerHTML = `
     <button type="button" data-action="add-polygon">Сгенерировать полигон</button>
     <button type="button" data-action="delete-selected">Удалить выбранный</button>
     <button type="button" data-action="delete-all">Удалить все</button>
-    <button type="button" data-action="undo" title="Ctrl+Z">Отменить</button>
-    <button type="button" data-action="redo" title="Ctrl+Y">Повторить</button>
+    <button type="button" data-action="undo" title="Горячая клавиша: Ctrl+Z">Отменить</button>
+    <button type="button" data-action="redo" title="Горячая клавиша: Ctrl+Y">Повторить</button>
     <input type="color" value="#4f46e5" aria-label="Цвет выбранного полигона" />
     <button type="button" data-action="recolor-selected">Перекрасить выбранный</button>
     <div class="info-panel">
