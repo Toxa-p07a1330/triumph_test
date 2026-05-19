@@ -45,9 +45,14 @@ if (appElement !== null) {
           ? String(selectedPolygon.id)
           : "Ничего не выбрано";
     };
+    const syncHistoryButtons = () => {
+      appElement.controlPanelComponent.undoDisabled = !appController.canUndo;
+      appElement.controlPanelComponent.redoDisabled = !appController.canRedo;
+    };
     const syncUi = () => {
       syncSelectedPolygonColor();
       syncInfoPanel();
+      syncHistoryButtons();
     };
 
     addPolygonButton.addEventListener("click", () => {
@@ -134,16 +139,16 @@ if (appElement !== null) {
         return;
       }
 
-      const key = event.key.toLowerCase();
+      const pressedKey = event.key.toLowerCase();
 
-      if (key === "z") {
+      if (pressedKey === "z") {
         event.preventDefault();
         appController.undo();
         syncUi();
         return;
       }
 
-      if (key === "y") {
+      if (pressedKey === "y") {
         event.preventDefault();
         appController.redo();
         syncUi();

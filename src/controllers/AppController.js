@@ -42,6 +42,14 @@ export class AppController {
     return this.#redoStack;
   }
 
+  get canUndo() {
+    return !this.#historyStack.isEmpty();
+  }
+
+  get canRedo() {
+    return !this.#redoStack.isEmpty();
+  }
+
   get isDraggingPolygon() {
     return this.#dragState !== null;
   }

@@ -84,6 +84,14 @@ controlPanelTemplate.innerHTML = `
       box-shadow: 0 6px 14px rgba(15, 23, 42, 0.1);
     }
 
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+      box-shadow: none;
+      transform: none;
+      background: #eef2f6;
+    }
+
     input[type="color"] {
       width: 56px;
       padding: 4px;
@@ -172,6 +180,14 @@ export class PolygonControlPanel extends HTMLElement {
 
   set selectedPolygonName(value) {
     this.#selectedPolygonNameValue.textContent = value;
+  }
+
+  set undoDisabled(value) {
+    this.#undoButton.disabled = Boolean(value);
+  }
+
+  set redoDisabled(value) {
+    this.#redoButton.disabled = Boolean(value);
   }
 }
 
