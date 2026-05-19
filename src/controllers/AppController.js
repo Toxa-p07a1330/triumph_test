@@ -15,6 +15,7 @@ export class AppController {
   #redoStack;
   #canvasController;
   #polygons;
+  #dragState = null;
 
   constructor(canvasElement) {
     if (!(canvasElement instanceof HTMLCanvasElement)) {
@@ -38,6 +39,10 @@ export class AppController {
 
   get redoStack() {
     return this.#redoStack;
+  }
+
+  get isDraggingPolygon() {
+    return this.#dragState !== null;
   }
 
   get canvasController() {
@@ -98,6 +103,107 @@ export class AppController {
     return true;
   }
 
+  beginPolygonDrag(targetPoint) {
+    if (!(targetPoint instanceof Point)) {
+      throw new TypeError("AppController beginPolygonDrag requires a Point instance.");
+    }
+
+    const polygon = this.#getPolygonAtPoint(targetPoint);
+
+    if (polygon === null) {
+      Polygon.selectedPolygonId = null;
+      this.#dragState = null;
+      this.render();
+      return false;
+    }
+
+    Polygon.selectedPolygonId = polygon.id;
+    this.#dragState = {
+      polygonId: polygon.id,
+      startMousePoint: targetPoint.clone(),
+      startPosition: polygon.position,
+      lastValidPosition: polygon.position,
+      hasMoved: false,
+    };
+    this.render();
+
+    return true;
+  }
+
+  updatePolygonDrag(targetPoint) {
+    if (!(targetPoint instanceof Point)) {
+      throw new TypeError("AppController updatePolygonDrag requires a Point instance.");
+    }
+
+    if (this.#dragState === null) {
+      return false;
+    }
+
+    const polygon = this.#polygons.getById(this.#dragState.polygonId);
+
+    if (polygon === null || polygon.isDeleted) {
+      this.#dragState = null;
+      return false;
+    }
+
+    const deltaX = targetPoint.x - this.#dragState.startMousePoint.x;
+    const deltaY = targetPoint.y - this.#dragState.startMousePoint.y;
+    const boundedPosition = this.#getBoundedPolygonPosition(
+      polygon,
+      new Point(
+        this.#dragState.startPosition.x + deltaX,
+        this.#dragState.startPosition.y + deltaY,
+      ),
+    );
+
+    polygon.position = boundedPosition;
+
+    if (this.#overlapsExistingPolygons(polygon, polygon.id)) {
+      polygon.position = this.#dragState.lastValidPosition;
+      return false;
+    }
+
+    this.#dragState.lastValidPosition = boundedPosition;
+    this.#dragState.hasMoved =
+      boundedPosition.x !== this.#dragState.startPosition.x
+      || boundedPosition.y !== this.#dragState.startPosition.y;
+    this.render();
+
+    return true;
+  }
+
+  endPolygonDrag() {
+    if (this.#dragState === null) {
+      return false;
+    }
+
+    const polygon = this.#polygons.getById(this.#dragState.polygonId);
+
+    if (polygon !== null && this.#dragState.hasMoved) {
+      this.#pushHistoryRecord(
+        new HistoryRecord(
+          HistoryRecord.ACTION_TYPES.MOVED,
+          polygon.id,
+          {
+            position: {
+              x: this.#dragState.startPosition.x,
+              y: this.#dragState.startPosition.y,
+            },
+          },
+          {
+            position: {
+              x: this.#dragState.lastValidPosition.x,
+              y: this.#dragState.lastValidPosition.y,
+            },
+          },
+        ),
+      );
+    }
+
+    this.#dragState = null;
+    return true;
+  }
+
   undo() {
     const historyRecord = this.#historyStack.pop();
 
@@ -133,17 +239,8 @@ export class AppController {
       throw new TypeError("AppController selectPolygonAtPoint requires a Point instance.");
     }
 
-    const polygons = this.#polygons.items.filter((polygon) => !polygon.isDeleted);
-    let selectedPolygonId = null;
-
-    for (let polygonIndex = polygons.length - 1; polygonIndex >= 0; polygonIndex -= 1) {
-      const polygon = polygons[polygonIndex];
-
-      if (GeometryHelper.isPointInPolygon(targetPoint, polygon.points)) {
-        selectedPolygonId = polygon.id;
-        break;
-      }
-    }
+    const polygon = this.#getPolygonAtPoint(targetPoint);
+    const selectedPolygonId = polygon?.id ?? null;
 
     Polygon.selectedPolygonId = selectedPolygonId;
     this.render();
@@ -208,10 +305,35 @@ export class AppController {
     );
   }
 
-  #overlapsExistingPolygons(candidatePolygon) {
+  #overlapsExistingPolygons(candidatePolygon, ignoredPolygonId = null) {
     return this.#polygons.items
-      .filter((polygon) => !polygon.isDeleted)
+      .filter((polygon) => !polygon.isDeleted && polygon.id !== ignoredPolygonId)
       .some((polygon) => GeometryHelper.polygonsOverlap(candidatePolygon.points, polygon.points));
+  }
+
+  #getPolygonAtPoint(targetPoint) {
+    const polygons = this.#polygons.items.filter((polygon) => !polygon.isDeleted);
+
+    for (let polygonIndex = polygons.length - 1; polygonIndex >= 0; polygonIndex -= 1) {
+      const polygon = polygons[polygonIndex];
+
+      if (GeometryHelper.isPointInPolygon(targetPoint, polygon.points)) {
+        return polygon;
+      }
+    }
+
+    return null;
+  }
+
+  #getBoundedPolygonPosition(polygon, candidatePosition) {
+    const { width, height } = this.#canvasElement.getBoundingClientRect();
+    const canvasWidth = Math.max(1, Math.round(width));
+    const canvasHeight = Math.max(1, Math.round(height));
+
+    return new Point(
+      Math.min(Math.max(0, candidatePosition.x), Math.max(0, canvasWidth - polygon.width)),
+      Math.min(Math.max(polygon.height, candidatePosition.y), canvasHeight),
+    );
   }
 
   #pushHistoryRecord(historyRecord) {
@@ -237,6 +359,21 @@ export class AppController {
 
         if (properties !== null && typeof properties.isDeleted === "boolean") {
           polygon.isDeleted = properties.isDeleted;
+        }
+        break;
+      }
+      case HistoryRecord.ACTION_TYPES.MOVED: {
+        const properties = useNewProperties
+          ? historyRecord.newProperties
+          : historyRecord.oldProperties;
+
+        if (
+          properties !== null
+          && properties.position !== undefined
+          && Number.isFinite(properties.position.x)
+          && Number.isFinite(properties.position.y)
+        ) {
+          polygon.position = new Point(properties.position.x, properties.position.y);
         }
         break;
       }

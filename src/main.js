@@ -1,6 +1,7 @@
 import "./components/PolygonEditorApp.js";
 import { AppController } from "./controllers/index.js";
 import { Point } from "./models/index.js";
+import { debounce } from "./utils/debounce.js";
 
 const appElement = document.querySelector("polygon-editor-app");
 
@@ -13,6 +14,18 @@ if (appElement !== null) {
       undoButton,
       redoButton,
     } = appElement.controlPanelComponent;
+    const canvasElement = appElement.canvasComponent.canvasElement;
+    const getCanvasPoint = (event) => {
+      const canvasRect = canvasElement.getBoundingClientRect();
+
+      return new Point(
+        event.clientX - canvasRect.left,
+        event.clientY - canvasRect.top,
+      );
+    };
+    const debouncedDragUpdate = debounce((point) => {
+      appController.updatePolygonDrag(point);
+    });
 
     addPolygonButton.addEventListener("click", () => {
       const polygon = appController.addRandomPolygon();
@@ -34,14 +47,28 @@ if (appElement !== null) {
       appController.redo();
     });
 
-    appElement.canvasComponent.canvasElement.addEventListener("click", (event) => {
-      const canvasRect = appElement.canvasComponent.canvasElement.getBoundingClientRect();
-      const point = new Point(
-        event.clientX - canvasRect.left,
-        event.clientY - canvasRect.top,
-      );
+    canvasElement.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
 
-      appController.selectPolygonAtPoint(point);
+      appController.beginPolygonDrag(getCanvasPoint(event));
+    });
+
+    window.addEventListener("mousemove", (event) => {
+      if (!appController.isDraggingPolygon) {
+        return;
+      }
+
+      debouncedDragUpdate(getCanvasPoint(event));
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (!appController.isDraggingPolygon) {
+        return;
+      }
+
+      appController.endPolygonDrag();
     });
 
     appController.render();
