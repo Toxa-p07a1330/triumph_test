@@ -34,30 +34,44 @@ if (appElement !== null) {
 
       colorInput.value = `#${toHex(selectedPolygon.color.r)}${toHex(selectedPolygon.color.g)}${toHex(selectedPolygon.color.b)}`;
     };
+    const syncInfoPanel = () => {
+      const activePolygonsCount = appController.polygons.items.filter((polygon) => !polygon.isDeleted).length;
+      const selectedPolygon = appController.selectedPolygon;
+
+      appElement.controlPanelComponent.polygonsCount = activePolygonsCount;
+      appElement.controlPanelComponent.selectedPolygonName =
+        selectedPolygon !== null && !selectedPolygon.isDeleted
+          ? String(selectedPolygon.id)
+          : "Ничего не выбрано";
+    };
+    const syncUi = () => {
+      syncSelectedPolygonColor();
+      syncInfoPanel();
+    };
 
     addPolygonButton.addEventListener("click", () => {
       const polygon = appController.addRandomPolygon();
 
       if (polygon === null) {
-        alert("Ну удалось добавить полигон");
+        alert("Не удалось добавить полигон");
       }
 
-      syncSelectedPolygonColor();
+      syncUi();
     });
 
     deleteSelectedButton.addEventListener("click", () => {
       appController.deleteSelectedPolygon();
-      syncSelectedPolygonColor();
+      syncUi();
     });
 
     undoButton.addEventListener("click", () => {
       appController.undo();
-      syncSelectedPolygonColor();
+      syncUi();
     });
 
     redoButton.addEventListener("click", () => {
       appController.redo();
-      syncSelectedPolygonColor();
+      syncUi();
     });
 
     recolorSelectedButton.addEventListener("click", () => {
@@ -70,7 +84,7 @@ if (appElement !== null) {
           Number.parseInt(hexColor.slice(4, 6), 16),
         ),
       );
-      syncSelectedPolygonColor();
+      syncUi();
     });
 
     canvasElement.addEventListener("mousedown", (event) => {
@@ -79,7 +93,7 @@ if (appElement !== null) {
       }
 
       appController.beginPolygonDrag(getCanvasPoint(event));
-      syncSelectedPolygonColor();
+      syncUi();
     });
 
     window.addEventListener("mousemove", (event) => {
@@ -96,10 +110,10 @@ if (appElement !== null) {
       }
 
       appController.endPolygonDrag();
-      syncSelectedPolygonColor();
+      syncUi();
     });
 
     appController.render();
-    syncSelectedPolygonColor();
+    syncUi();
   });
 }

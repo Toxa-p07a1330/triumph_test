@@ -25,6 +25,32 @@ controlPanelTemplate.innerHTML = `
       overflow-x: auto;
     }
 
+    .info-panel {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, auto));
+      gap: 8px 24px;
+      margin-left: auto;
+      padding-left: 12px;
+      white-space: nowrap;
+    }
+
+    .info-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 120px;
+    }
+
+    .info-title {
+      color: rgba(17, 32, 49, 0.7);
+      font: 600 12px/1.2 "Segoe UI", sans-serif;
+    }
+
+    .info-value {
+      color: #112031;
+      font: 700 16px/1.2 "Segoe UI", sans-serif;
+    }
+
     button,
     input[type="color"] {
       flex: 0 0 auto;
@@ -66,13 +92,23 @@ controlPanelTemplate.innerHTML = `
     }
   </style>
   <div class="panel">
-    <button type="button" data-action="add-polygon">Add polygon</button>
-    <button type="button" data-action="delete-selected">Delete selected</button>
-    <button type="button" data-action="delete-all">Delete all</button>
-    <button type="button" data-action="undo">Undo</button>
-    <button type="button" data-action="redo">Redo</button>
-    <input type="color" value="#4f46e5" aria-label="Selected polygon color" />
-    <button type="button" data-action="recolor-selected">Recolor selected</button>
+    <button type="button" data-action="add-polygon">Сгенерировать полигон</button>
+    <button type="button" data-action="delete-selected">Удалить выбранный</button>
+    <button type="button" data-action="delete-all">Удалить все</button>
+    <button type="button" data-action="undo">Отменить</button>
+    <button type="button" data-action="redo">Повторить</button>
+    <input type="color" value="#4f46e5" aria-label="Цвет выбранного полигона" />
+    <button type="button" data-action="recolor-selected">Перекрасить выбранный</button>
+    <div class="info-panel">
+      <div class="info-block">
+        <div class="info-title">Количество полигонов</div>
+        <div class="info-value" data-role="polygons-count">0</div>
+      </div>
+      <div class="info-block">
+        <div class="info-title">Имя выбранного полигона</div>
+        <div class="info-value" data-role="selected-polygon-name">Ничего не выбрано</div>
+      </div>
+    </div>
   </div>
 `;
 
@@ -83,6 +119,8 @@ export class PolygonControlPanel extends HTMLElement {
   #redoButton;
   #colorInput;
   #recolorSelectedButton;
+  #polygonsCountValue;
+  #selectedPolygonNameValue;
 
   constructor() {
     super();
@@ -94,6 +132,8 @@ export class PolygonControlPanel extends HTMLElement {
     this.#redoButton = shadowRoot.querySelector('[data-action="redo"]');
     this.#colorInput = shadowRoot.querySelector('input[type="color"]');
     this.#recolorSelectedButton = shadowRoot.querySelector('[data-action="recolor-selected"]');
+    this.#polygonsCountValue = shadowRoot.querySelector('[data-role="polygons-count"]');
+    this.#selectedPolygonNameValue = shadowRoot.querySelector('[data-role="selected-polygon-name"]');
   }
 
   get addPolygonButton() {
@@ -118,6 +158,14 @@ export class PolygonControlPanel extends HTMLElement {
 
   get recolorSelectedButton() {
     return this.#recolorSelectedButton;
+  }
+
+  set polygonsCount(value) {
+    this.#polygonsCountValue.textContent = String(value);
+  }
+
+  set selectedPolygonName(value) {
+    this.#selectedPolygonNameValue.textContent = value;
   }
 }
 
