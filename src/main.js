@@ -182,6 +182,19 @@ if (appElement !== null) {
     });
 
     window.addEventListener("keydown", (event) => {
+      if (event.key === "Delete") {
+        event.preventDefault();
+
+        const isDeleted = appController.deleteSelectedPolygon();
+
+        if (!isDeleted) {
+          alert("РќРёС‡РµРіРѕ РЅРµ РІС‹Р±СЂР°РЅРѕ");
+        }
+
+        syncUi();
+        return;
+      }
+
       if (!event.ctrlKey) {
         return;
       }
@@ -196,6 +209,13 @@ if (appElement !== null) {
       }
 
       if (pressedKey === "y") {
+        event.preventDefault();
+        appController.redo();
+        syncUi();
+        return;
+      }
+
+      if (pressedKey === "z" && event.shiftKey) {
         event.preventDefault();
         appController.redo();
         syncUi();
